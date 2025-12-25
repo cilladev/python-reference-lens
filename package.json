@@ -1,0 +1,66 @@
+{
+  "name": "python-reference-lens",
+  "displayName": "Python Reference Lens",
+  "description": "Shows reference count above Python functions and classes (like JetBrains IDEs)",
+  "version": "1.0.0",
+  "publisher": "cilladev",
+  "icon": "images/icon.png",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cilladev/python-reference-lens.git"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:python"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Python Reference Lens",
+      "properties": {
+        "pythonReferenceLens.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable reference CodeLens"
+        },
+        "pythonReferenceLens.showForFunctions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show references for functions"
+        },
+        "pythonReferenceLens.showForClasses": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show references for classes"
+        },
+        "pythonReferenceLens.showForMethods": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show references for class methods"
+        },
+        "pythonReferenceLens.minReferencesToShow": {
+          "type": "number",
+          "default": 1,
+          "description": "Minimum number of references to display (0 = always show)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "^18.0.0",
+    "typescript": "^5.0.0"
+  }
+}
