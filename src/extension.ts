@@ -39,6 +39,7 @@ class PythonReferenceCodeLensProvider implements vscode.CodeLensProvider {
       return [];
     }
 
+    const minRefs = config.get<number>('minReferencesToShow', 1);
     const symbols = this.findPythonSymbols(document, config);
     const codeLenses: vscode.CodeLens[] = [];
 
@@ -47,11 +48,38 @@ class PythonReferenceCodeLensProvider implements vscode.CodeLensProvider {
         return [];
       }
 
-      const codeLens = new vscode.CodeLens(symbol.range);
-      (codeLens as any).symbolPosition = symbol.position;
-      (codeLens as any).symbolName = symbol.name;
-      (codeLens as any).documentUri = document.uri;
-      codeLenses.push(codeLens);
+      // Check references before creating CodeLens
+      try {
+        const locations = await vscode.commands.executeCommand<vscode.Location[]>(
+          'vscode.executeReferenceProvider',
+          document.uri,
+          symbol.position
+        );
+
+        // Subtract 1 to exclude the definition itself
+        const referenceCount = locations ? Math.max(0, locations.length - 1) : 0;
+
+        // Skip if below minimum references threshold
+        if (referenceCount < minRefs) {
+          continue;
+        }
+
+        const title = referenceCount === 1
+          ? '$(references) 1 reference'
+          : `$(references) ${referenceCount} references`;
+
+        const codeLens = new vscode.CodeLens(symbol.range, {
+          title: title,
+          command: 'editor.action.findReferences',
+          arguments: [document.uri, symbol.position],
+          tooltip: `Find all references to ${symbol.name}`
+        });
+
+        codeLenses.push(codeLens);
+      } catch (error) {
+        // Skip this symbol on error
+        continue;
+      }
     }
 
     return codeLenses;
@@ -61,54 +89,7 @@ class PythonReferenceCodeLensProvider implements vscode.CodeLensProvider {
     codeLens: vscode.CodeLens,
     token: vscode.CancellationToken
   ): Promise<vscode.CodeLens> {
-    const config = vscode.workspace.getConfiguration('pythonReferenceLens');
-    const minRefs = config.get<number>('minReferencesToShow', 0);
-
-    const symbolPosition = (codeLens as any).symbolPosition as vscode.Position;
-    const symbolName = (codeLens as any).symbolName as string;
-    const documentUri = (codeLens as any).documentUri as vscode.Uri;
-
-    try {
-      const locations = await vscode.commands.executeCommand<vscode.Location[]>(
-        'vscode.executeReferenceProvider',
-        documentUri,
-        symbolPosition
-      );
-
-      if (token.isCancellationRequested) {
-        return codeLens;
-      }
-
-      // Subtract 1 to exclude the definition itself
-      const referenceCount = locations ? Math.max(0, locations.length - 1) : 0;
-
-      if (referenceCount < minRefs) {
-        codeLens.command = {
-          title: '',
-          command: ''
-        };
-        return codeLens;
-      }
-
-      const title = referenceCount === 0
-        ? '$(references) no references'
-        : referenceCount === 1
-          ? '$(references) 1 reference'
-          : `$(references) ${referenceCount} references`;
-
-      codeLens.command = {
-        title: title,
-        command: 'editor.action.findReferences',
-        arguments: [documentUri, symbolPosition],
-        tooltip: `Find all references to ${symbolName}`
-      };
-    } catch (error) {
-      codeLens.command = {
-        title: '$(error) Error finding references',
-        command: ''
-      };
-    }
-
+    // CodeLens is already resolved in provideCodeLenses
     return codeLens;
   }
 
@@ -159,8 +140,10 @@ class PythonReferenceCodeLensProvider implements vscode.CodeLensProvider {
         const indent = funcMatch[1].length;
         const funcName = funcMatch[3];
         
-        // Skip private/dunder methods if they start with _
-        // (optional: you can remove this if you want to show all)
+        // Skip __init__ methods
+        if (funcName === '__init__') {
+          continue;
+        }
         
         // Determine if it's a method or function
         const isMethod = inClass && indent > classIndent;

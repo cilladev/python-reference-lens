@@ -2,7 +2,7 @@
   "name": "python-reference-lens",
   "displayName": "Python Reference Lens",
   "description": "Shows reference count above Python functions and classes (like JetBrains IDEs)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "cilladev",
   "icon": "images/icon.png",
   "engines": {

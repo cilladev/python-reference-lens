@@ -33,7 +33,7 @@ class UserService:  # ← Click to find all references
 | `pythonReferenceLens.showForFunctions` | `true` | Show references for functions |
 | `pythonReferenceLens.showForClasses` | `true` | Show references for classes |
 | `pythonReferenceLens.showForMethods` | `true` | Show references for class methods |
-| `pythonReferenceLens.minReferencesToShow` | `0` | Minimum references to display (0 = always show) |
+| `pythonReferenceLens.minReferencesToShow` | `1` | Minimum references to display |
 
 ## Commands
 
